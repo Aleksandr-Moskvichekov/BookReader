@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="BookReader.AppHost/BookReader.AppHost.csproj" />
+  <Project Path="BookReader.ServiceDefaults/BookReader.ServiceDefaults.csproj" />
+  <Project Path="BookReader/BookReader.csproj" />
+</Solution>
