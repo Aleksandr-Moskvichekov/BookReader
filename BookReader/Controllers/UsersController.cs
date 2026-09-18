@@ -10,7 +10,7 @@ namespace BookReader.Controllers
     public class UsersController : ControllerBase
     {
         private readonly UserSevice userSevice; 
-        public UsersController(UserSevice userMi) //пробник
+        public UsersController(UserSevice userMi) //пробникdc
         {
             userSevice = userMi;
         }
