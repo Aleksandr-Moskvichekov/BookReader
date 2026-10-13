@@ -17,6 +17,7 @@ namespace BookReader.Controllers
         }
 
         [HttpPost("register")]
+        [Authorize(Policy = "Guest")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
             try
@@ -30,6 +31,7 @@ namespace BookReader.Controllers
         }
 
         [HttpPost("login")]
+        [Authorize(Policy = "Guest")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             try
@@ -43,6 +45,7 @@ namespace BookReader.Controllers
         }
 
         [HttpPost("refresh")]
+        [Authorize(Policy = "Guest")]
         public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
         {
             try
@@ -56,6 +59,7 @@ namespace BookReader.Controllers
         }
 
         [HttpPost("logout")]
+        [Authorize(Policy = "Guest")]
         public async Task<IActionResult> Logout([FromBody] RefreshTokenRequest request)
         {
             await _auth.LogoutAsync(request.RefreshToken);
@@ -63,7 +67,7 @@ namespace BookReader.Controllers
         }
 
         // Защищённый эндпоинт-зеркало: показывает, кого видит сервер в токене
-        [Authorize]
+        [Authorize(Policy = "User")]
         [HttpGet("me")]
         public IActionResult Me()
         {

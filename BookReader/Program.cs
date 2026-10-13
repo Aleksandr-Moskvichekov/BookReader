@@ -1,4 +1,5 @@
 using BookReader.Data;
+using BookReader.Data.Models;
 using BookReader.Extentions;
 using BookReader.Services;
 using BookReader.Storage;
@@ -42,7 +43,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Guest", policy => policy.RequireAssertion(_ => true));
+    options.AddPolicy("User", policy => policy.RequireRole(
+        nameof(UserRole.User), nameof(UserRole.Author), nameof(UserRole.Admin)));
+    options.AddPolicy("Author", policy => policy.RequireRole(
+        nameof(UserRole.Author), nameof(UserRole.Admin)));
+    options.AddPolicy("Admin", policy => policy.RequireRole(nameof(UserRole.Admin)));
+});
 
 builder.Services.AddApiDocumentation();
 

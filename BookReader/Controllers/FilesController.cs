@@ -21,6 +21,7 @@ namespace BookReader.Controllers
         // POST /api/files/upload
         [HttpPost("upload")]
         [Consumes("multipart/form-data")]
+        [Authorize(Policy = "Author")]
         
         public async Task<IActionResult> Upload(IFormFile? file)
         {
@@ -56,7 +57,7 @@ namespace BookReader.Controllers
 
         // GET /api/files/url?key=books/xxx-file.pdf
         [HttpGet("url")]
-        
+        [Authorize(Policy = "User")]
         public async Task<IActionResult> GetUrl([FromQuery] string key)
         {
             var url = await _storage.GetPresignedUrlAsync(key);
@@ -65,6 +66,7 @@ namespace BookReader.Controllers
 
         // GET /api/files/download?key=books/xxx-file.pdf
         [HttpGet("download")]
+        [Authorize(Policy = "User")]
         public async Task<IActionResult> Download([FromQuery] string key)
         {
             if (string.IsNullOrWhiteSpace(key))
