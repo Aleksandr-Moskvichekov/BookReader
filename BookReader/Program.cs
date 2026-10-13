@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddJsonFile("appsettings.Admin.json", optional: true, reloadOnChange: false);
 
 builder.AddServiceDefaults();
 
@@ -44,9 +45,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 builder.Services.AddApiDocumentation();
-
-builder.Services.AddSingleton<UserSevice>();/// пробник Удалить
-
 
 builder.AddNpgsqlDbContext<ApplicationDbContext>("bookdb");
 
@@ -109,6 +107,13 @@ if (app.Environment.IsDevelopment())
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     await db.Database.MigrateAsync();
 }
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await InitialAdminSeeder.SeedAsync(db, app.Configuration, app.Logger);
+}
+
 app.UseAuthentication();
 
 
