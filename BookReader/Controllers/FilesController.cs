@@ -1,4 +1,5 @@
 ﻿using BookReader.Storage;
+using BookReader.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -26,13 +27,19 @@ namespace BookReader.Controllers
             if (file is null || file.Length == 0)
                 return BadRequest("Файл пустой");
 
+            using (var validationStream = file.OpenReadStream())
+            {
+                if (!UploadedBookFormatValidator.IsValid(file.FileName, validationStream))
+                    return BadRequest("Допустимы только файлы FB2, EPUB, PDF и TXT. Расширение должно соответствовать содержимому файла.");
+            }
+
             _logger.LogInformation("Получен файл {FileName}, размер {FileSize} байт", file.FileName, file.Length);
 
             try
             {
                 await using var stream = file.OpenReadStream();
                 var key = await _storage.UploadAsync(
-                    stream, file.FileName, file.ContentType ?? "application/octet-stream");
+                    stream, file.FileName, UploadedBookFormatValidator.GetContentType(file.FileName));
 
                 _logger.LogInformation("Файл {FileName} загружен в S3 под ключом {StorageKey}", file.FileName, key);
                 return Ok(new { key });
