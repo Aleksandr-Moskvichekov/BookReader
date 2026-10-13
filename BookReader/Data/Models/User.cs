@@ -7,7 +7,7 @@
         public string PasswordHash { get; set; } = string.Empty;
         public string DisplayName { get; set; } = string.Empty;
         public UserRole Role { get; set; } = UserRole.User;
-        public string? AvatarKey { get; set; }      // ключ файла в MinIO
+        public string? AvatarKey { get; set; }      // ключ файла в S3-хранилище
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public ICollection<Book> Books { get; set; } = new List<Book>();

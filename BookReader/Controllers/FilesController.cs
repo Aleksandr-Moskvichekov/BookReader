@@ -9,25 +9,42 @@ namespace BookReader.Controllers
     public class FilesController : ControllerBase
     {
         private readonly IFileStorageService _storage;
+        private readonly ILogger<FilesController> _logger;
 
-        public FilesController(IFileStorageService storage)
+        public FilesController(IFileStorageService storage, ILogger<FilesController> logger)
         {
             _storage = storage;
+            _logger = logger;
         }
 
         // POST /api/files/upload
-        [HttpPost("upload")] // поправить код upload не работает из-за AntyFrogeryToken
-        [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> Upload(IFormFile file)
+        [HttpPost("upload")]
+        [Consumes("multipart/form-data")]
+        
+        public async Task<IActionResult> Upload(IFormFile? file)
         {
             if (file is null || file.Length == 0)
                 return BadRequest("Файл пустой");
 
-            using var stream = file.OpenReadStream();
-            var key = await _storage.UploadAsync(
-                stream, file.FileName, file.ContentType ?? "application/octet-stream");
+            _logger.LogInformation("Получен файл {FileName}, размер {FileSize} байт", file.FileName, file.Length);
 
-            return Ok(new { key });
+            try
+            {
+                await using var stream = file.OpenReadStream();
+                var key = await _storage.UploadAsync(
+                    stream, file.FileName, file.ContentType ?? "application/octet-stream");
+
+                _logger.LogInformation("Файл {FileName} загружен в S3 под ключом {StorageKey}", file.FileName, key);
+                return Ok(new { key });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Не удалось загрузить файл {FileName} в S3-хранилище", file.FileName);
+                return Problem(
+                    title: "Не удалось загрузить файл",
+                    detail: "Проверьте доступность S3-хранилища и повторите попытку.",
+                    statusCode: StatusCodes.Status502BadGateway);
+            }
         }
 
         // GET /api/files/url?key=books/xxx-file.pdf
@@ -37,6 +54,19 @@ namespace BookReader.Controllers
         {
             var url = await _storage.GetPresignedUrlAsync(key);
             return Ok(new { url });
+        }
+
+        // GET /api/files/download?key=books/xxx-file.pdf
+        [HttpGet("download")]
+        public async Task<IActionResult> Download([FromQuery] string key)
+        {
+            if (string.IsNullOrWhiteSpace(key))
+                return BadRequest("Не указан ключ файла");
+
+            var (content, contentType) = await _storage.DownloadAsync(key);
+            var fileName = key[(key.LastIndexOf('/') + 1)..];
+
+            return File(content, contentType, fileName);
         }
     }
 }

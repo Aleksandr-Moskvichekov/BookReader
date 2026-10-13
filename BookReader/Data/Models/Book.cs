@@ -6,7 +6,7 @@
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public int PublishYear { get; set; }
-        public string? CoverKey { get; set; }       // ключ обложки в MinIO
+        public string? CoverKey { get; set; }       // ключ обложки в S3-хранилище
         public int ViewsCount { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

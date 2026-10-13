@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
-using Minio;
+using S3Storage;
 using System.Reflection;
 using System.Text;
 
@@ -68,17 +68,18 @@ var secretKeyBooks = partsBooks["SecretKey"];
 
 
 
-var minioClient = new MinioClient()
-    .WithSSL(false)
-    .WithEndpoint(endpointUriBooks.Host, endpointUriBooks.Port)
-    .WithCredentials(accessKeyBooks, secretKeyBooks)
-    .Build();
+var s3Client = S3ClientFactory.ForRustFS(
+    host: endpointUriBooks.Host,
+    accessKey: accessKeyBooks,
+    secretKey: secretKeyBooks,
+    port: endpointUriBooks.Port,
+    useSSL: endpointUriBooks.Scheme == Uri.UriSchemeHttps);
 
 
-builder.Services.AddSingleton<IFileStorageService, MinioFileStorageService>();
+builder.Services.AddSingleton<IFileStorageService, S3FileStorageService>();
 
 
-builder.Services.AddSingleton<IMinioClient>(minioClient);
+builder.Services.AddSingleton<IS3Client>(s3Client);
 var app = builder.Build();
 
 try
@@ -89,7 +90,7 @@ try
 }
 catch (Exception ex)
 {
-    app.Logger.LogWarning(ex, "MinIO недоступен при старте — файлы временно не работают");
+    app.Logger.LogWarning(ex, "S3 storage недоступно при старте — файлы временно не работают");
 }
 
 app.MapDefaultEndpoints();
