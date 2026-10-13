@@ -224,6 +224,12 @@ namespace BookReader.Migrations
                     b.Property<string>("AvatarKey")
                         .HasColumnType("text");
 
+                    b.Property<string>("BanReason")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("BannedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -235,11 +241,20 @@ namespace BookReader.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<bool>("IsBanned")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsBootstrapAdmin")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("Role")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TokenVersion")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");

@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using S3Storage;
+using System.Security.Claims;
 using System.Reflection;
 using System.Text;
 
@@ -25,6 +26,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IAdminUserService, AdminUserService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -40,6 +42,30 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret"]!)),
             ClockSkew = TimeSpan.Zero
+        };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var userIdValue = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+                var tokenVersionValue = context.Principal?.FindFirstValue("token_version");
+                if (!int.TryParse(userIdValue, out var userId)
+                    || !int.TryParse(tokenVersionValue, out var tokenVersion))
+                {
+                    context.Fail("JWT does not contain valid user state claims");
+                    return;
+                }
+
+                var db = context.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
+                var userState = await db.Users.AsNoTracking()
+                    .Where(user => user.Id == userId)
+                    .Select(user => new { user.IsBanned, user.TokenVersion })
+                    .FirstOrDefaultAsync(context.HttpContext.RequestAborted);
+
+                if (userState is null || userState.IsBanned || userState.TokenVersion != tokenVersion)
+                    context.Fail("JWT has been revoked or the user is banned");
+            }
         };
     });
 

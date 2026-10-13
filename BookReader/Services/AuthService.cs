@@ -51,6 +51,9 @@ namespace BookReader.Services
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email)
                 ?? throw new AppException(401, "Неверный email или пароль");
 
+            if (user.IsBanned)
+                throw new AppException(403, "Учётная запись заблокирована");
+
             if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
                 throw new AppException(401, "Неверный email или пароль");
 
@@ -65,7 +68,8 @@ namespace BookReader.Services
                 .Include(token => token.User)
                 .FirstOrDefaultAsync(token => token.TokenHash == tokenHash
                     && token.RevokedAt == null
-                    && token.ExpiresAt > now)
+                    && token.ExpiresAt > now
+                    && !token.User.IsBanned)
                 ?? throw new AppException(401, "Недействительный или истёкший refresh-токен");
 
             var strategy = _db.Database.CreateExecutionStrategy();
@@ -151,7 +155,8 @@ namespace BookReader.Services
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.Email),
             new Claim(ClaimTypes.Name, user.DisplayName),
-            new Claim(ClaimTypes.Role, user.Role.ToString())
+            new Claim(ClaimTypes.Role, user.Role.ToString()),
+            new Claim("token_version", user.TokenVersion.ToString())
         };
 
             var token = new JwtSecurityToken(
