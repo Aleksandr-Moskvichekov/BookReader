@@ -55,6 +55,13 @@ namespace BookReader.Controllers
             }
         }
 
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout([FromBody] RefreshTokenRequest request)
+        {
+            await _auth.LogoutAsync(request.RefreshToken);
+            return NoContent();
+        }
+
         // Защищённый эндпоинт-зеркало: показывает, кого видит сервер в токене
         [Authorize]
         [HttpGet("me")]

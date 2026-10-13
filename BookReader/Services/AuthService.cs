@@ -87,6 +87,16 @@ namespace BookReader.Services
             });
         }
 
+        public async Task LogoutAsync(string refreshToken)
+        {
+            var tokenHash = HashRefreshToken(refreshToken);
+            var now = DateTime.UtcNow;
+
+            await _db.RefreshTokens
+                .Where(token => token.TokenHash == tokenHash && token.RevokedAt == null)
+                .ExecuteUpdateAsync(update => update.SetProperty(token => token.RevokedAt, now));
+        }
+
         private async Task<AuthResponse> BuildAuthResponseAsync(User user)
         {
             var expiresMinutes = _config.GetValue<int>("Jwt:ExpiresMinutes", 60);
