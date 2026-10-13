@@ -14,6 +14,7 @@ namespace BookReader.Data
         public DbSet<BookFile> BookFiles => Set<BookFile>();
         public DbSet<Rating> Ratings => Set<Rating>();
         public DbSet<Comment> Comments => Set<Comment>();
+        public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

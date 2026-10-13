@@ -42,6 +42,19 @@ namespace BookReader.Controllers
             }
         }
 
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
+        {
+            try
+            {
+                return Ok(await _auth.RefreshAsync(request.RefreshToken));
+            }
+            catch (AppException ex)
+            {
+                return Problem(statusCode: ex.StatusCode, title: ex.Message);
+            }
+        }
+
         // Защищённый эндпоинт-зеркало: показывает, кого видит сервер в токене
         [Authorize]
         [HttpGet("me")]

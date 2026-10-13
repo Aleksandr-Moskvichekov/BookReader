@@ -5,6 +5,7 @@ using BookReader.Responses.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Cryptography;
 using System.Security.Claims;
 using System.Text;
 
@@ -40,7 +41,7 @@ namespace BookReader.Services
             _db.Users.Add(user);
             await _db.SaveChangesAsync();
 
-            return BuildAuthResponse(user);
+            return await BuildAuthResponseAsync(user);
         }
 
         public async Task<AuthResponse> LoginAsync(LoginRequest request)
@@ -53,17 +54,60 @@ namespace BookReader.Services
             if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
                 throw new AppException(401, "Неверный email или пароль");
 
-            return BuildAuthResponse(user);
+            return await BuildAuthResponseAsync(user);
         }
 
-        private AuthResponse BuildAuthResponse(User user)
+        public async Task<AuthResponse> RefreshAsync(string refreshToken)
+        {
+            var now = DateTime.UtcNow;
+            var tokenHash = HashRefreshToken(refreshToken);
+            var storedToken = await _db.RefreshTokens
+                .Include(token => token.User)
+                .FirstOrDefaultAsync(token => token.TokenHash == tokenHash
+                    && token.RevokedAt == null
+                    && token.ExpiresAt > now)
+                ?? throw new AppException(401, "Недействительный или истёкший refresh-токен");
+
+            var strategy = _db.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
+                await using var transaction = await _db.Database.BeginTransactionAsync();
+                var revokedCount = await _db.RefreshTokens
+                    .Where(token => token.Id == storedToken.Id
+                        && token.RevokedAt == null
+                        && token.ExpiresAt > now)
+                    .ExecuteUpdateAsync(update => update.SetProperty(token => token.RevokedAt, now));
+
+                if (revokedCount == 0)
+                    throw new AppException(401, "Недействительный или истёкший refresh-токен");
+
+                var response = await BuildAuthResponseAsync(storedToken.User);
+                await transaction.CommitAsync();
+                return response;
+            });
+        }
+
+        private async Task<AuthResponse> BuildAuthResponseAsync(User user)
         {
             var expiresMinutes = _config.GetValue<int>("Jwt:ExpiresMinutes", 60);
+            var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(
+                _config.GetValue<int>("Jwt:RefreshTokenExpiresDays", 30));
+            var refreshToken = GenerateRefreshToken();
+
+            _db.RefreshTokens.Add(new RefreshToken
+            {
+                UserId = user.Id,
+                TokenHash = HashRefreshToken(refreshToken),
+                ExpiresAt = refreshTokenExpiresAt
+            });
+            await _db.SaveChangesAsync();
 
             return new AuthResponse
             {
                 Token = GenerateToken(user, expiresMinutes),
                 ExpiresAt = DateTime.UtcNow.AddMinutes(expiresMinutes),
+                RefreshToken = refreshToken,
+                RefreshTokenExpiresAt = refreshTokenExpiresAt,
                 User = new UserResponse
                 {
                     Id = user.Id,
@@ -72,6 +116,19 @@ namespace BookReader.Services
                     Role = user.Role.ToString()
                 }
             };
+        }
+
+        private static string GenerateRefreshToken()
+        {
+            return Convert.ToBase64String(RandomNumberGenerator.GetBytes(64))
+                .Replace("+", "-")
+                .Replace("/", "_")
+                .TrimEnd('=');
+        }
+
+        private static string HashRefreshToken(string refreshToken)
+        {
+            return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(refreshToken)));
         }
 
         private string GenerateToken(User user, int expiresMinutes)
