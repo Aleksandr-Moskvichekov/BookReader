@@ -75,6 +75,8 @@ var s3Client = S3ClientFactory.ForRustFS(
     port: endpointUriBooks.Port,
     useSSL: endpointUriBooks.Scheme == Uri.UriSchemeHttps);
 
+if (!await s3Client.BucketExistsAsync("image"))
+    await s3Client.CreateBucketAsync("image");
 
 builder.Services.AddSingleton<IFileStorageService, S3FileStorageService>();
 

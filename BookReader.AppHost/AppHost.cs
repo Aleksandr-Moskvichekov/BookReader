@@ -4,8 +4,6 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 var rustfs = builder.AddRustFs("rustfs")
     .WithDataVolume();
-var booksBucket = rustfs.AddBucket("books");
-var imageBucket = rustfs.AddBucket("image");
 
 var postgres = builder.AddPostgres("postgres")
     .WithDataVolume("BookReaderPlatform_PostgresData")
