@@ -15,6 +15,8 @@ namespace BookReader.Data
         public DbSet<Rating> Ratings => Set<Rating>();
         public DbSet<Comment> Comments => Set<Comment>();
         public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+        public DbSet<UserFavorite> UserFavorites => Set<UserFavorite>();
+        public DbSet<UserBookHistory> UserBookHistories => Set<UserBookHistory>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

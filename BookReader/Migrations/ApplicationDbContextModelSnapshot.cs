@@ -262,6 +262,46 @@ namespace BookReader.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("BookReader.Data.Models.UserBookHistory", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("BookId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("LastAccessedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("UserId", "BookId");
+
+                    b.HasIndex("BookId");
+
+                    b.HasIndex("UserId", "LastAccessedAt");
+
+                    b.ToTable("UserBookHistories");
+                });
+
+            modelBuilder.Entity("BookReader.Data.Models.UserFavorite", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("BookId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("UserId", "BookId");
+
+                    b.HasIndex("BookId");
+
+                    b.HasIndex("UserId", "CreatedAt");
+
+                    b.ToTable("UserFavorites");
+                });
+
             modelBuilder.Entity("BookGenres", b =>
                 {
                     b.HasOne("BookReader.Data.Models.Book", null)
@@ -348,20 +388,66 @@ namespace BookReader.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("BookReader.Data.Models.UserBookHistory", b =>
+                {
+                    b.HasOne("BookReader.Data.Models.Book", "Book")
+                        .WithMany("UserHistory")
+                        .HasForeignKey("BookId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BookReader.Data.Models.User", "User")
+                        .WithMany("BookHistory")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Book");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("BookReader.Data.Models.UserFavorite", b =>
+                {
+                    b.HasOne("BookReader.Data.Models.Book", "Book")
+                        .WithMany("FavoritedBy")
+                        .HasForeignKey("BookId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BookReader.Data.Models.User", "User")
+                        .WithMany("Favorites")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Book");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("BookReader.Data.Models.Book", b =>
                 {
                     b.Navigation("Comments");
 
+                    b.Navigation("FavoritedBy");
+
                     b.Navigation("Files");
 
                     b.Navigation("Ratings");
+
+                    b.Navigation("UserHistory");
                 });
 
             modelBuilder.Entity("BookReader.Data.Models.User", b =>
                 {
+                    b.Navigation("BookHistory");
+
                     b.Navigation("Books");
 
                     b.Navigation("Comments");
+
+                    b.Navigation("Favorites");
 
                     b.Navigation("Ratings");
                 });

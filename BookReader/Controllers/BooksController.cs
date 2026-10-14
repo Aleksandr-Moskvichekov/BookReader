@@ -130,6 +130,10 @@ public class BooksController : ControllerBase
         if (!string.IsNullOrWhiteSpace(book.CoverKey))
             coverUrl = await _storage.GetPresignedUrlAsync(book.CoverKey);
 
+        var viewerId = GetCurrentUserId();
+        if (viewerId.HasValue)
+            await RecordBookAccessAsync(viewerId.Value, id, cancellationToken);
+
         return Ok(new BookDetailsResponse
         {
             Id = book.Id,
@@ -503,17 +507,45 @@ public class BooksController : ControllerBase
         if (file is null)
             return NotFound();
 
+        byte[] content;
+        string contentType;
         try
         {
-            var (content, contentType) = await _storage.DownloadAsync(file.StorageKey);
-            var contentStream = new MemoryStream(content, writable: false);
-            return File(contentStream, contentType, enableRangeProcessing: true);
+            (content, contentType) = await _storage.DownloadAsync(file.StorageKey);
         }
         catch (Exception exception)
         {
             _logger.LogError(exception, "Не удалось прочитать файл {FileId} книги {BookId} из S3", fileId, id);
             return Problem(title: "Не удалось получить содержимое файла", statusCode: StatusCodes.Status502BadGateway);
         }
+
+        var readerId = GetCurrentUserId();
+        if (readerId.HasValue)
+            await RecordBookAccessAsync(readerId.Value, id, cancellationToken);
+
+        var contentStream = new MemoryStream(content, writable: false);
+        return File(contentStream, contentType, enableRangeProcessing: true);
+    }
+
+    private async Task RecordBookAccessAsync(int userId, int bookId, CancellationToken cancellationToken)
+    {
+        var history = await _db.UserBookHistories.FindAsync(
+            new object[] { userId, bookId }, cancellationToken);
+        if (history is null)
+        {
+            _db.UserBookHistories.Add(new UserBookHistory
+            {
+                UserId = userId,
+                BookId = bookId,
+                LastAccessedAt = DateTime.UtcNow
+            });
+        }
+        else
+        {
+            history.LastAccessedAt = DateTime.UtcNow;
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
     }
 
     private int? GetCurrentUserId() => int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId)

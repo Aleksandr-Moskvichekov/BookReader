@@ -17,5 +17,7 @@
         public ICollection<BookFile> Files { get; set; } = new List<BookFile>();
         public ICollection<Rating> Ratings { get; set; } = new List<Rating>();
         public ICollection<Comment> Comments { get; set; } = new List<Comment>();
+        public ICollection<UserFavorite> FavoritedBy { get; set; } = new List<UserFavorite>();
+        public ICollection<UserBookHistory> UserHistory { get; set; } = new List<UserBookHistory>();
     }
 }
