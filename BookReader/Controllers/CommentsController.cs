@@ -20,6 +20,8 @@ public class CommentsController : ControllerBase
         _db = db;
     }
 
+    /// <summary>Возвращает комментарии к книге, начиная с самых новых.</summary>
+    /// <remarks>Доступно гостям. Поддерживаются page и pageSize (максимум 100).</remarks>
     [HttpGet("books/{bookId:int}/comments")]
     public async Task<ActionResult<CommentListResponse>> GetComments(
         int bookId,
@@ -64,6 +66,8 @@ public class CommentsController : ControllerBase
         });
     }
 
+    /// <summary>Добавляет комментарий к книге от имени текущего пользователя.</summary>
+    /// <remarks>Требуется авторизация с ролью User, Author или Admin. Текст комментария не может быть пустым.</remarks>
     [HttpPost("books/{bookId:int}/comments")]
     [Authorize(Policy = "User")]
     public async Task<IActionResult> AddComment(
@@ -103,6 +107,8 @@ public class CommentsController : ControllerBase
         return CreatedAtAction(nameof(GetComments), new { bookId }, response);
     }
 
+    /// <summary>Удаляет комментарий.</summary>
+    /// <remarks>Пользователь может удалить свой комментарий; Admin может удалить любой комментарий.</remarks>
     [HttpDelete("comments/{commentId:int}")]
     [Authorize(Policy = "User")]
     public async Task<IActionResult> DeleteComment(int commentId, CancellationToken cancellationToken)

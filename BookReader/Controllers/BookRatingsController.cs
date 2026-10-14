@@ -20,6 +20,8 @@ public class BookRatingsController : ControllerBase
         _db = db;
     }
 
+    /// <summary>Возвращает средний рейтинг и количество оценок книги.</summary>
+    /// <remarks>Доступно гостям. Для авторизованного пользователя дополнительно возвращается его оценка; если оценок нет, averageRating равен null.</remarks>
     [HttpGet]
     public async Task<ActionResult<BookRatingResponse>> GetRating(int bookId, CancellationToken cancellationToken)
     {
@@ -52,6 +54,8 @@ public class BookRatingsController : ControllerBase
         });
     }
 
+    /// <summary>Ставит или обновляет свою оценку книги.</summary>
+    /// <remarks>Требуется авторизация с ролью User, Author или Admin. Score должен быть от 1 до 5.</remarks>
     [HttpPut]
     [Authorize(Policy = "User")]
     public async Task<IActionResult> SetRating(int bookId, RateBookRequest request, CancellationToken cancellationToken)
@@ -82,6 +86,8 @@ public class BookRatingsController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Удаляет свою оценку книги.</summary>
+    /// <remarks>Требуется авторизация с ролью User, Author или Admin.</remarks>
     [HttpDelete]
     [Authorize(Policy = "User")]
     public async Task<IActionResult> DeleteRating(int bookId, CancellationToken cancellationToken)

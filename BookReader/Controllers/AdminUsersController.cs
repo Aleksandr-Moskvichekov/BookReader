@@ -18,6 +18,8 @@ namespace BookReader.Controllers
             _adminUsers = adminUsers;
         }
 
+        /// <summary>Возвращает страницу пользователей с необязательными фильтрами.</summary>
+        /// <remarks>Доступно только Admin. Поддерживаются поиск, фильтр по роли и статусу блокировки, а также page/pageSize.</remarks>
         [HttpGet]
         public async Task<IActionResult> GetUsers(
             [FromQuery] string? search,
@@ -36,6 +38,8 @@ namespace BookReader.Controllers
             }
         }
 
+        /// <summary>Возвращает сведения об одном пользователе.</summary>
+        /// <remarks>Доступно только Admin.</remarks>
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetUser(int id)
         {
@@ -49,6 +53,8 @@ namespace BookReader.Controllers
             }
         }
 
+        /// <summary>Изменяет роль пользователя.</summary>
+        /// <remarks>Доступно только Admin. Изменение роли отзывает ранее выданные токены пользователя.</remarks>
         [HttpPut("{id:int}/role")]
         public async Task<IActionResult> ChangeRole(int id, [FromBody] ChangeUserRoleRequest request)
         {
@@ -62,6 +68,8 @@ namespace BookReader.Controllers
             }
         }
 
+        /// <summary>Блокирует пользователя с указанной причиной.</summary>
+        /// <remarks>Доступно только Admin. Активные токены заблокированного пользователя становятся недействительными.</remarks>
         [HttpPost("{id:int}/ban")]
         public async Task<IActionResult> Ban(int id, [FromBody] BanUserRequest request)
         {
@@ -75,6 +83,8 @@ namespace BookReader.Controllers
             }
         }
 
+        /// <summary>Снимает блокировку с пользователя.</summary>
+        /// <remarks>Доступно только Admin.</remarks>
         [HttpPost("{id:int}/unban")]
         public async Task<IActionResult> Unban(int id)
         {

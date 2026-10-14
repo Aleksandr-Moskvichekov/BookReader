@@ -17,6 +17,8 @@ public class CollectionsController : ControllerBase
         _db = db;
     }
 
+    /// <summary>Возвращает подборку книг с наивысшим средним рейтингом.</summary>
+    /// <remarks>Доступно гостям. Книги без оценок включаются в конец списка. Поддерживаются page и pageSize (максимум 100).</remarks>
     [HttpGet("top-rated")]
     public Task<ActionResult<BookCollectionResponse>> GetTopRated(
         [FromQuery] int page = 1,
@@ -31,6 +33,8 @@ public class CollectionsController : ControllerBase
         return GetPageAsync(books, page, pageSize, cancellationToken);
     }
 
+    /// <summary>Возвращает популярные книги, отсортированные по числу просмотров.</summary>
+    /// <remarks>Доступно гостям. Поддерживаются page и pageSize (максимум 100).</remarks>
     [HttpGet("popular")]
     public Task<ActionResult<BookCollectionResponse>> GetPopular(
         [FromQuery] int page = 1,
@@ -44,6 +48,8 @@ public class CollectionsController : ControllerBase
         return GetPageAsync(books, page, pageSize, cancellationToken);
     }
 
+    /// <summary>Возвращает новые книги, отсортированные по дате добавления.</summary>
+    /// <remarks>Доступно гостям. Поддерживаются page и pageSize (максимум 100).</remarks>
     [HttpGet("new")]
     public Task<ActionResult<BookCollectionResponse>> GetNew(
         [FromQuery] int page = 1,

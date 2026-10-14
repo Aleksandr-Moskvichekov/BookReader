@@ -16,6 +16,8 @@ namespace BookReader.Controllers
             _auth = auth;
         }
 
+        /// <summary>Регистрирует пользователя и возвращает access- и refresh-токены.</summary>
+        /// <remarks>Роль нового пользователя — User. Email должен быть уникальным, пароль — не короче 6 символов.</remarks>
         [HttpPost("register")]
         [Authorize(Policy = "Guest")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
@@ -30,6 +32,8 @@ namespace BookReader.Controllers
             }
         }
 
+        /// <summary>Выполняет вход по email и паролю.</summary>
+        /// <remarks>При успешной проверке возвращает JWT access token и refresh token.</remarks>
         [HttpPost("login")]
         [Authorize(Policy = "Guest")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
@@ -44,6 +48,8 @@ namespace BookReader.Controllers
             }
         }
 
+        /// <summary>Обновляет пару токенов по refresh token.</summary>
+        /// <remarks>Использованный refresh token отзывается; в ответе выдаётся новая пара токенов.</remarks>
         [HttpPost("refresh")]
         [Authorize(Policy = "Guest")]
         public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
@@ -58,6 +64,8 @@ namespace BookReader.Controllers
             }
         }
 
+        /// <summary>Завершает сессию, отзывая refresh token.</summary>
+        /// <remarks>Access token остаётся действительным до истечения срока или изменения token version пользователя.</remarks>
         [HttpPost("logout")]
         [Authorize(Policy = "Guest")]
         public async Task<IActionResult> Logout([FromBody] RefreshTokenRequest request)
@@ -67,6 +75,8 @@ namespace BookReader.Controllers
         }
 
         // Защищённый эндпоинт-зеркало: показывает, кого видит сервер в токене
+        /// <summary>Возвращает идентификатор, email и роль текущего пользователя из JWT.</summary>
+        /// <remarks>Требуется авторизация с ролью User, Author или Admin.</remarks>
         [Authorize(Policy = "User")]
         [HttpGet("me")]
         public IActionResult Me()

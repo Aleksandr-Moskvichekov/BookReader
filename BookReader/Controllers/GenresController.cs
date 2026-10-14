@@ -19,6 +19,8 @@ public class GenresController : ControllerBase
         _db = db;
     }
 
+    /// <summary>Возвращает список всех жанров по алфавиту.</summary>
+    /// <remarks>Доступно гостям; список можно использовать для фильтров и формы создания книги.</remarks>
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<GenreResponse>>> GetGenres(CancellationToken cancellationToken)
     {
@@ -34,6 +36,8 @@ public class GenresController : ControllerBase
         return Ok(genres);
     }
 
+    /// <summary>Возвращает жанр по идентификатору.</summary>
+    /// <remarks>Доступно гостям.</remarks>
     [HttpGet("{id:int}")]
     public async Task<ActionResult<GenreResponse>> GetGenre(int id, CancellationToken cancellationToken)
     {
@@ -49,6 +53,8 @@ public class GenresController : ControllerBase
         return genre is null ? NotFound() : Ok(genre);
     }
 
+    /// <summary>Создаёт жанр.</summary>
+    /// <remarks>Доступно только Admin. Название обязательно; дубликат названия возвращает Conflict.</remarks>
     [HttpPost]
     [Authorize(Policy = "Admin")]
     public async Task<IActionResult> CreateGenre(GenreWriteRequest request, CancellationToken cancellationToken)
@@ -69,6 +75,8 @@ public class GenresController : ControllerBase
         });
     }
 
+    /// <summary>Переименовывает жанр.</summary>
+    /// <remarks>Доступно только Admin. Название должно быть уникальным.</remarks>
     [HttpPut("{id:int}")]
     [Authorize(Policy = "Admin")]
     public async Task<IActionResult> RenameGenre(int id, GenreWriteRequest request, CancellationToken cancellationToken)
@@ -89,6 +97,8 @@ public class GenresController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Удаляет жанр и его связи с книгами.</summary>
+    /// <remarks>Доступно только Admin. Книги сохраняются, удаляется только связь с жанром.</remarks>
     [HttpDelete("{id:int}")]
     [Authorize(Policy = "Admin")]
     public async Task<IActionResult> DeleteGenre(int id, CancellationToken cancellationToken)

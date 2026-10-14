@@ -28,6 +28,8 @@ public class BooksController : ControllerBase
         _logger = logger;
     }
 
+    /// <summary>Возвращает каталог книг с поиском, фильтрами, сортировкой и пагинацией.</summary>
+    /// <remarks>Поиск q выполняется по названию и автору. Несколько genreIds объединяются по OR. Поддерживаются year/yearFrom/yearTo, sortBy=title|year|createdAt, sortDirection=asc|desc, page и pageSize (максимум 100).</remarks>
     [HttpGet]
     public async Task<ActionResult<BookCatalogResponse>> GetCatalog(
         [FromQuery] string? q,
@@ -110,6 +112,8 @@ public class BooksController : ControllerBase
         });
     }
 
+    /// <summary>Возвращает подробную информацию о книге, включая жанры, рейтинг и файлы.</summary>
+    /// <remarks>Публичный endpoint. Каждый успешный просмотр увеличивает счётчик просмотров; для вошедшего пользователя обновляет историю чтения.</remarks>
     [HttpGet("{id:int}")]
     public async Task<ActionResult<BookDetailsResponse>> GetBook(int id, CancellationToken cancellationToken)
     {
@@ -155,6 +159,8 @@ public class BooksController : ControllerBase
         });
     }
 
+    /// <summary>Создаёт книгу от имени текущего автора.</summary>
+    /// <remarks>Требуется роль Author или Admin. AuthorId берётся из JWT; все переданные GenreIds должны существовать.</remarks>
     [HttpPost]
     [Authorize(Policy = "Author")]
     public async Task<IActionResult> CreateBook(BookWriteRequest request, CancellationToken cancellationToken)
@@ -184,6 +190,8 @@ public class BooksController : ControllerBase
         return CreatedAtAction(nameof(GetBook), new { id = book.Id }, new { id = book.Id });
     }
 
+    /// <summary>Изменяет метаданные своей книги.</summary>
+    /// <remarks>Требуется роль Author или Admin, и пользователь должен быть владельцем книги.</remarks>
     [HttpPut("{id:int}")]
     [Authorize(Policy = "Author")]
     public async Task<IActionResult> UpdateBook(int id, BookWriteRequest request, CancellationToken cancellationToken)
@@ -214,6 +222,8 @@ public class BooksController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Удаляет книгу и связанные с ней файлы и обложку.</summary>
+    /// <remarks>Author может удалить только свою книгу; Admin — любую.</remarks>
     [HttpDelete("{id:int}")]
     [Authorize(Policy = "Author")]
     public async Task<IActionResult> DeleteBook(int id, CancellationToken cancellationToken)
@@ -248,6 +258,8 @@ public class BooksController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Загружает или заменяет обложку книги.</summary>
+    /// <remarks>Требуется роль Author или Admin и владение книгой. Multipart-поле file должно содержать изображение JPG, PNG или WebP с соответствующим MIME-типом.</remarks>
     [HttpPut("{id:int}/cover")]
     [Authorize(Policy = "Author")]
     [Consumes("multipart/form-data")]
@@ -318,6 +330,8 @@ public class BooksController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Удаляет обложку своей книги.</summary>
+    /// <remarks>Требуется роль Author или Admin и владение книгой.</remarks>
     [HttpDelete("{id:int}/cover")]
     [Authorize(Policy = "Author")]
     public async Task<IActionResult> DeleteCover(int id, CancellationToken cancellationToken)
@@ -348,6 +362,8 @@ public class BooksController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Возвращает список файлов книги с форматом и размером.</summary>
+    /// <remarks>Публичный endpoint.</remarks>
     [HttpGet("{id:int}/files")]
     public async Task<ActionResult<IReadOnlyList<BookFileResponse>>> GetFiles(int id, CancellationToken cancellationToken)
     {
@@ -368,6 +384,8 @@ public class BooksController : ControllerBase
         return Ok(files);
     }
 
+    /// <summary>Загружает файл книги.</summary>
+    /// <remarks>Требуется роль Author или Admin и владение книгой. Multipart-поле file: EPUB, FB2, PDF или TXT, максимум 50 МиБ; расширение, MIME-тип и содержимое проверяются.</remarks>
     [HttpPost("{id:int}/files")]
     [Authorize(Policy = "Author")]
     [Consumes("multipart/form-data")]
@@ -445,6 +463,8 @@ public class BooksController : ControllerBase
         });
     }
 
+    /// <summary>Удаляет файл своей книги.</summary>
+    /// <remarks>Требуется роль Author или Admin и владение книгой.</remarks>
     [HttpDelete("{id:int}/files/{fileId:int}")]
     [Authorize(Policy = "Author")]
     public async Task<IActionResult> DeleteBookFile(int id, int fileId, CancellationToken cancellationToken)
@@ -477,6 +497,8 @@ public class BooksController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Создаёт временную ссылку на скачивание файла книги.</summary>
+    /// <remarks>Требуется авторизация с ролью User, Author или Admin. Ссылка действует 15 минут.</remarks>
     [HttpGet("{id:int}/files/{fileId:int}/download-url")]
     [Authorize(Policy = "User")]
     public async Task<IActionResult> GetBookFileDownloadUrl(int id, int fileId, CancellationToken cancellationToken)
@@ -498,6 +520,8 @@ public class BooksController : ControllerBase
         }
     }
 
+    /// <summary>Передаёт содержимое файла книги через API для веб-ридера.</summary>
+    /// <remarks>Требуется авторизация с ролью User, Author или Admin. Поддерживается HTTP range; успешное чтение обновляет историю пользователя.</remarks>
     [HttpGet("{id:int}/files/{fileId:int}/content")]
     [Authorize(Policy = "User")]
     public async Task<IActionResult> GetBookFileContent(int id, int fileId, CancellationToken cancellationToken)

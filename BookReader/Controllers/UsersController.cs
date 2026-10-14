@@ -27,6 +27,8 @@ public class UsersController : ControllerBase
         _logger = logger;
     }
 
+    /// <summary>Возвращает публичный профиль пользователя.</summary>
+    /// <remarks>Содержит отображаемое имя, дату регистрации и временную ссылку на аватар, если он задан. Доступно гостям.</remarks>
     [HttpGet("{id:int}")]
     public async Task<ActionResult<PublicUserProfileResponse>> GetProfile(int id, CancellationToken cancellationToken)
     {
@@ -59,6 +61,8 @@ public class UsersController : ControllerBase
         });
     }
 
+    /// <summary>Изменяет отображаемое имя текущего пользователя.</summary>
+    /// <remarks>Требуется авторизация с ролью User, Author или Admin.</remarks>
     [HttpPut("me")]
     [Authorize(Policy = "User")]
     public async Task<IActionResult> UpdateProfile(UpdateProfileRequest request, CancellationToken cancellationToken)
@@ -75,6 +79,8 @@ public class UsersController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Изменяет пароль текущего пользователя.</summary>
+    /// <remarks>Требуется текущий пароль. После успешной смены отзываются refresh-токены и ранее выданные access-токены.</remarks>
     [HttpPut("me/password")]
     [Authorize(Policy = "User")]
     public async Task<IActionResult> ChangePassword(ChangePasswordRequest request, CancellationToken cancellationToken)
@@ -97,6 +103,8 @@ public class UsersController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Загружает или заменяет аватар текущего пользователя.</summary>
+    /// <remarks>Требуется авторизация с ролью User, Author или Admin. Multipart-поле file должно содержать изображение JPG, PNG или WebP с соответствующим MIME-типом.</remarks>
     [HttpPut("me/avatar")]
     [Authorize(Policy = "User")]
     [Consumes("multipart/form-data")]
@@ -163,6 +171,8 @@ public class UsersController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Удаляет аватар текущего пользователя.</summary>
+    /// <remarks>Требуется авторизация с ролью User, Author или Admin.</remarks>
     [HttpDelete("me/avatar")]
     [Authorize(Policy = "User")]
     public async Task<IActionResult> DeleteAvatar(CancellationToken cancellationToken)
@@ -189,6 +199,8 @@ public class UsersController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Возвращает страницу избранных книг текущего пользователя.</summary>
+    /// <remarks>Требуется авторизация с ролью User, Author или Admin. Поддерживаются page и pageSize (максимум 100).</remarks>
     [HttpGet("me/favorites")]
     [Authorize(Policy = "User")]
     public async Task<ActionResult<UserBookListResponse>> GetFavorites(
@@ -218,6 +230,8 @@ public class UsersController : ControllerBase
         return await GetBookPageAsync(books, page, pageSize, cancellationToken);
     }
 
+    /// <summary>Добавляет книгу в избранное текущего пользователя.</summary>
+    /// <remarks>Требуется авторизация с ролью User, Author или Admin. Операция идемпотентна: повторный запрос не создаёт дубликат.</remarks>
     [HttpPut("me/favorites/{bookId:int}")]
     [Authorize(Policy = "User")]
     public async Task<IActionResult> AddFavorite(int bookId, CancellationToken cancellationToken)
@@ -240,6 +254,8 @@ public class UsersController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Удаляет книгу из избранного текущего пользователя.</summary>
+    /// <remarks>Требуется авторизация с ролью User, Author или Admin.</remarks>
     [HttpDelete("me/favorites/{bookId:int}")]
     [Authorize(Policy = "User")]
     public async Task<IActionResult> RemoveFavorite(int bookId, CancellationToken cancellationToken)
@@ -254,6 +270,8 @@ public class UsersController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Возвращает страницу истории книг текущего пользователя.</summary>
+    /// <remarks>История содержит время последнего просмотра страницы книги или успешного открытия её файла. Поддерживаются page и pageSize (максимум 100).</remarks>
     [HttpGet("me/history")]
     [Authorize(Policy = "User")]
     public async Task<ActionResult<UserBookListResponse>> GetHistory(
@@ -283,6 +301,8 @@ public class UsersController : ControllerBase
         return await GetBookPageAsync(books, page, pageSize, cancellationToken);
     }
 
+    /// <summary>Возвращает книги, загруженные текущим автором.</summary>
+    /// <remarks>Требуется роль Author или Admin. Поддерживаются page и pageSize (максимум 100).</remarks>
     [HttpGet("me/books")]
     [Authorize(Policy = "Author")]
     public async Task<ActionResult<UserBookListResponse>> GetMyBooks(
