@@ -35,3 +35,18 @@ public class BookCatalogResponse
     public int PageSize { get; init; }
     public int TotalCount { get; init; }
 }
+
+public class CollectionBookResponse : BookSummaryResponse
+{
+    public double? AverageRating { get; init; }
+    public int ViewsCount { get; init; }
+    public DateTime CreatedAt { get; init; }
+}
+
+public class BookCollectionResponse
+{
+    public IReadOnlyList<CollectionBookResponse> Items { get; init; } = [];
+    public int Page { get; init; }
+    public int PageSize { get; init; }
+    public int TotalCount { get; init; }
+}
