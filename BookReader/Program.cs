@@ -78,6 +78,11 @@ builder.Services.AddAuthorization(options =>
         nameof(UserRole.Author), nameof(UserRole.Admin)));
     options.AddPolicy("Admin", policy => policy.RequireRole(nameof(UserRole.Admin)));
 });
+//var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? []; для разрешенных сайтов
+builder.Services.AddCors(options => options.AddPolicy("Frontend", policy =>
+    policy.AllowAnyOrigin() //allowedOrigins
+        .AllowAnyHeader()
+        .AllowAnyMethod()));
 
 builder.Services.AddApiDocumentation();
 
@@ -150,10 +155,10 @@ using (var scope = app.Services.CreateScope())
     await InitialAdminSeeder.SeedAsync(db, app.Configuration, app.Logger);
 }
 
-app.UseAuthentication();
-
-
+app.UseRouting();
+app.UseCors("Frontend");
 app.UseHttpsRedirection();
+app.UseAuthentication();
 
 app.UseAuthorization();
 
